@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>CastForge Scanner</title>
+<title>promeos Scanner</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
@@ -48,6 +48,7 @@
   .status-dot.done { background: #22c55e; }
 
   @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
   .card {
     width: 100%;
@@ -67,6 +68,58 @@
     color: #555;
     padding: 16px 20px 10px;
   }
+  .section-label .req { color: #ff8b8b; margin-left: 2px; }
+
+  /* Sender */
+  .field-area { padding: 0 16px 16px; display: flex; flex-direction: column; gap: 10px; }
+
+  input[type="text"] {
+    width: 100%;
+    height: 46px;
+    background: #0d0d0d;
+    border: 0.5px solid #2a2a2a;
+    border-radius: 12px;
+    color: #e0e0e0;
+    font-size: 15px;
+    font-family: inherit;
+    padding: 0 16px;
+    outline: none;
+    -webkit-appearance: none;
+  }
+  input[type="text"]::placeholder { color: #444; }
+  input[type="text"]:focus { border-color: #3a3a3a; }
+  input[type="text"].invalid { border-color: #ef444488; }
+
+  .remember-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: #888;
+    cursor: pointer;
+    user-select: none;
+  }
+  .remember-row input { width: 18px; height: 18px; accent-color: #3b3bff; }
+
+  /* Priority */
+  .priority-group { display: flex; gap: 8px; padding: 0 16px 16px; }
+  .prio-btn {
+    flex: 1;
+    height: 46px;
+    border-radius: 12px;
+    border: 0.5px solid #2a2a2a;
+    background: #1e1e1e;
+    color: #aaa;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    -webkit-appearance: none;
+  }
+  .prio-btn:active { transform: scale(0.97); }
+  .prio-btn.selected.high { background: #2e1a1a; border-color: #ef4444; color: #ff8b8b; }
+  .prio-btn.selected.medium { background: #2e261a; border-color: #f59e0b; color: #fbbf24; }
+  .prio-btn.selected.low { background: #1a2e1a; border-color: #22c55e; color: #8bff8b; }
 
   .photo-area {
     margin: 0 16px 16px;
@@ -82,19 +135,8 @@
     cursor: pointer;
   }
 
-  #video {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: none;
-  }
-
-  #photo-preview {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: none;
-  }
+  #video { width: 100%; height: 100%; object-fit: cover; display: none; }
+  #photo-preview { width: 100%; height: 100%; object-fit: cover; display: none; }
 
   .photo-placeholder {
     display: flex;
@@ -103,17 +145,8 @@
     gap: 10px;
     color: #444;
   }
-
-  .photo-placeholder svg {
-    width: 36px;
-    height: 36px;
-    stroke: #444;
-  }
-
-  .photo-placeholder span {
-    font-size: 13px;
-    color: #555;
-  }
+  .photo-placeholder svg { width: 36px; height: 36px; stroke: #444; }
+  .photo-placeholder span { font-size: 13px; color: #555; }
 
   .corner-guide {
     position: absolute;
@@ -128,11 +161,7 @@
   .corner-guide.bl { bottom: 10px; left: 10px; border-bottom-width: 2px; border-left-width: 2px; border-radius: 0 0 0 3px; }
   .corner-guide.br { bottom: 10px; right: 10px; border-bottom-width: 2px; border-right-width: 2px; border-radius: 0 0 3px 0; }
 
-  .photo-actions {
-    display: flex;
-    gap: 8px;
-    padding: 0 16px 16px;
-  }
+  .photo-actions { display: flex; gap: 8px; padding: 0 16px 16px; }
 
   .btn {
     flex: 1;
@@ -151,7 +180,6 @@
     transition: all 0.15s;
     -webkit-appearance: none;
   }
-
   .btn:active { transform: scale(0.97); background: #262626; }
   .btn.primary { background: #1a1a2e; border-color: #3b3bff44; color: #8b8bff; }
   .btn.primary:active { background: #22224a; }
@@ -171,13 +199,7 @@
     gap: 12px;
   }
 
-  .waveform {
-    height: 48px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 3px;
-  }
+  .waveform { height: 48px; display: flex; align-items: center; justify-content: center; gap: 3px; }
 
   .wave-bar {
     width: 3px;
@@ -186,16 +208,9 @@
     height: 8px;
     transition: height 0.1s, background 0.3s;
   }
+  .wave-bar.active { background: #8b8bff; animation: wave 0.6s ease-in-out infinite; }
 
-  .wave-bar.active {
-    background: #8b8bff;
-    animation: wave 0.6s ease-in-out infinite;
-  }
-
-  @keyframes wave {
-    0%,100% { height: 8px; }
-    50% { height: 32px; }
-  }
+  @keyframes wave { 0%,100% { height: 8px; } 50% { height: 32px; } }
 
   .wave-bar.active:nth-child(2) { animation-delay: 0.1s; }
   .wave-bar.active:nth-child(3) { animation-delay: 0.2s; }
@@ -217,15 +232,9 @@
   .audio-timer.recording { color: #e0e0e0; }
   .audio-timer.done { color: #22c55e; }
 
-  .audio-actions {
-    display: flex;
-    gap: 8px;
-    padding: 0 16px 16px;
-  }
+  .audio-actions { display: flex; gap: 8px; padding: 0 16px 16px; }
 
-  .note-area {
-    padding: 0 16px 16px;
-  }
+  .note-area { padding: 0 16px 16px; }
 
   textarea {
     width: 100%;
@@ -244,10 +253,14 @@
   textarea::placeholder { color: #444; }
   textarea:focus { border-color: #3a3a3a; }
 
-  .send-card {
-    width: 100%;
-    max-width: 420px;
-    margin-top: 4px;
+  .send-card { width: 100%; max-width: 420px; margin-top: 4px; }
+
+  .send-hint {
+    text-align: center;
+    font-size: 12px;
+    color: #555;
+    margin-top: 10px;
+    min-height: 16px;
   }
 
   .send-btn {
@@ -314,8 +327,31 @@
 <body>
 
 <div class="header">
-  <span class="logo">CastForge 2026</span>
+  <span class="logo">promeos Scanner</span>
   <div class="status-dot" id="status-dot"></div>
+</div>
+
+<!-- Sender -->
+<div class="card">
+  <div class="section-label">Sender<span class="req">*</span></div>
+  <div class="field-area">
+    <input type="text" id="sender" list="sender-list" placeholder="Who is scanning? (your name)" autocomplete="off" oninput="onSenderInput()">
+    <datalist id="sender-list"></datalist>
+    <label class="remember-row">
+      <input type="checkbox" id="remember-sender" checked onchange="onRememberChange()">
+      Remember me on this device
+    </label>
+  </div>
+</div>
+
+<!-- Priority -->
+<div class="card">
+  <div class="section-label">Priority<span class="req">*</span></div>
+  <div class="priority-group" id="priority-group">
+    <button class="prio-btn high" data-value="high" onclick="setPriority('high')">High</button>
+    <button class="prio-btn medium" data-value="medium" onclick="setPriority('medium')">Medium</button>
+    <button class="prio-btn low" data-value="low" onclick="setPriority('low')">Low</button>
+  </div>
 </div>
 
 <div class="card">
@@ -381,6 +417,7 @@
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/></svg>
     Send to Pipedrive
   </button>
+  <div class="send-hint" id="send-hint"></div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -388,6 +425,10 @@
 
 <script>
 const WEBHOOK_URL = 'https://heatelligence.app.n8n.cloud/webhook/49e989bc-4e14-4205-a813-55c02a5ffba6';
+
+const LS_SENDER = 'promeos_scanner_sender';
+const LS_SENDER_LIST = 'promeos_scanner_sender_list';
+const LS_REMEMBER = 'promeos_scanner_remember';
 
 let stream = null;
 let mediaRecorder = null;
@@ -398,6 +439,7 @@ let isRecording = false;
 let timerInterval = null;
 let recordSeconds = 0;
 let cameraOpen = false;
+let priority = null;
 
 const video = document.getElementById('video');
 const canvas = document.getElementById('canvas');
@@ -406,13 +448,87 @@ const photoPlaceholder = document.getElementById('photo-placeholder');
 const audioTimer = document.getElementById('audio-timer');
 const waveform = document.getElementById('waveform');
 const sendBtn = document.getElementById('send-btn');
+const sendHint = document.getElementById('send-hint');
 const statusDot = document.getElementById('status-dot');
+const senderInput = document.getElementById('sender');
+const rememberBox = document.getElementById('remember-sender');
 
-function checkSendReady() {
-  sendBtn.disabled = !(photoDataUrl || audioBlob);
-  if (photoDataUrl || audioBlob) statusDot.className = 'status-dot ready';
+/* ---------- localStorage helpers (safe) ---------- */
+function lsGet(key) { try { return localStorage.getItem(key); } catch(e) { return null; } }
+function lsSet(key, val) { try { localStorage.setItem(key, val); } catch(e) {} }
+function lsRemove(key) { try { localStorage.removeItem(key); } catch(e) {} }
+
+function getSenderList() {
+  try { return JSON.parse(lsGet(LS_SENDER_LIST)) || []; } catch(e) { return []; }
 }
 
+function renderSenderList() {
+  const dl = document.getElementById('sender-list');
+  dl.innerHTML = '';
+  getSenderList().forEach(name => {
+    const opt = document.createElement('option');
+    opt.value = name;
+    dl.appendChild(opt);
+  });
+}
+
+function rememberSender(name) {
+  if (!rememberBox.checked || !name) return;
+  lsSet(LS_SENDER, name);
+  const list = getSenderList().filter(n => n.toLowerCase() !== name.toLowerCase());
+  list.unshift(name);
+  lsSet(LS_SENDER_LIST, JSON.stringify(list.slice(0, 10)));
+  renderSenderList();
+}
+
+function initSender() {
+  const remember = lsGet(LS_REMEMBER);
+  rememberBox.checked = remember !== '0';
+  if (rememberBox.checked) {
+    const saved = lsGet(LS_SENDER);
+    if (saved) senderInput.value = saved;
+  }
+  renderSenderList();
+}
+
+function onSenderInput() {
+  senderInput.classList.remove('invalid');
+  checkSendReady();
+}
+
+function onRememberChange() {
+  lsSet(LS_REMEMBER, rememberBox.checked ? '1' : '0');
+  if (!rememberBox.checked) lsRemove(LS_SENDER);
+  else rememberSender(senderInput.value.trim());
+}
+
+/* ---------- Priority ---------- */
+function setPriority(value) {
+  priority = value;
+  document.querySelectorAll('.prio-btn').forEach(b => {
+    b.classList.toggle('selected', b.dataset.value === value);
+  });
+  checkSendReady();
+}
+
+/* ---------- Validation ---------- */
+function checkSendReady() {
+  const hasSender = senderInput.value.trim().length > 0;
+  const hasContent = !!(photoDataUrl || audioBlob);
+  const ready = hasSender && !!priority && hasContent;
+
+  sendBtn.disabled = !ready;
+
+  const missing = [];
+  if (!hasSender) missing.push('sender');
+  if (!priority) missing.push('priority');
+  if (!hasContent) missing.push('photo or voice note');
+  sendHint.textContent = missing.length ? 'Missing: ' + missing.join(', ') : '';
+
+  statusDot.className = ready ? 'status-dot ready' : 'status-dot';
+}
+
+/* ---------- Camera ---------- */
 async function openCamera() {
   try {
     stream = await navigator.mediaDevices.getUserMedia({
@@ -445,12 +561,16 @@ function closeCamera() {
   cameraOpen = false;
   if (!photoDataUrl) {
     photoPlaceholder.style.display = 'flex';
-    document.getElementById('photo-actions').innerHTML = `
-      <button class="btn primary" id="btn-open-cam" onclick="openCamera()">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
-        Open camera
-      </button>`;
+    renderOpenCamButton();
   }
+}
+
+function renderOpenCamButton() {
+  document.getElementById('photo-actions').innerHTML = `
+    <button class="btn primary" id="btn-open-cam" onclick="openCamera()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      Open camera
+    </button>`;
 }
 
 function capturePhoto() {
@@ -481,14 +601,11 @@ function retakePhoto() {
   photoDataUrl = null;
   photoPreview.style.display = 'none';
   photoPlaceholder.style.display = 'flex';
-  document.getElementById('photo-actions').innerHTML = `
-    <button class="btn primary" id="btn-open-cam" onclick="openCamera()">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
-      Open camera
-    </button>`;
+  renderOpenCamButton();
   checkSendReady();
 }
 
+/* ---------- Audio ---------- */
 async function toggleRecord() {
   if (!isRecording) {
     try {
@@ -540,6 +657,7 @@ function playAudio() {
   if (!audioBlob) return;
   const url = URL.createObjectURL(audioBlob);
   const a = new Audio(url);
+  a.onended = () => URL.revokeObjectURL(url);
   a.play();
 }
 
@@ -554,20 +672,26 @@ function clearAudio() {
   checkSendReady();
 }
 
+/* ---------- Send ---------- */
+const SEND_BTN_HTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/></svg> Send to Pipedrive';
+
 async function sendData() {
+  const sender = senderInput.value.trim();
+  if (!sender) { senderInput.classList.add('invalid'); senderInput.focus(); return; }
+  if (!priority) { showToast('Select priority', 'error'); return; }
   if (!photoDataUrl && !audioBlob) return;
+
+  rememberSender(sender);
 
   sendBtn.disabled = true;
   sendBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="animation:spin 1s linear infinite"><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" opacity=".3"/><path d="M12 3a9 9 0 019 9"/></svg> Sending...';
   statusDot.className = 'status-dot sending';
 
-  const style = document.createElement('style');
-  style.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
-  document.head.appendChild(style);
-
   try {
     const payload = {
       timestamp: new Date().toISOString(),
+      sender: sender,
+      priority: priority,
       note: document.getElementById('note-text').value || ''
     };
 
@@ -594,9 +718,8 @@ async function sendData() {
     }
   } catch(e) {
     showToast('Error: ' + e.message, 'error');
-    statusDot.className = 'status-dot ready';
-    sendBtn.disabled = false;
-    sendBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/></svg> Send to Pipedrive';
+    sendBtn.innerHTML = SEND_BTN_HTML;
+    checkSendReady();
   }
 }
 
@@ -610,6 +733,10 @@ function blobToBase64(blob) {
 }
 
 function resetAll() {
+  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+  cameraOpen = false;
+  video.style.display = 'none';
+
   photoDataUrl = null;
   audioBlob = null;
   audioChunks = [];
@@ -621,14 +748,15 @@ function resetAll() {
   document.getElementById('note-text').value = '';
   document.getElementById('btn-play-audio').disabled = true;
   document.getElementById('btn-clear-audio').disabled = true;
-  document.getElementById('photo-actions').innerHTML = `
-    <button class="btn primary" id="btn-open-cam" onclick="openCamera()">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
-      Open camera
-    </button>`;
-  sendBtn.disabled = true;
-  sendBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/></svg> Send to Pipedrive';
-  statusDot.className = 'status-dot';
+  renderOpenCamButton();
+
+  // Priority resets per contact; sender stays if remembered
+  priority = null;
+  document.querySelectorAll('.prio-btn').forEach(b => b.classList.remove('selected'));
+  if (!rememberBox.checked) senderInput.value = '';
+
+  sendBtn.innerHTML = SEND_BTN_HTML;
+  checkSendReady();
 }
 
 function showToast(msg, type) {
@@ -638,6 +766,9 @@ function showToast(msg, type) {
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 3000);
 }
+
+initSender();
+checkSendReady();
 </script>
 </body>
 </html>
